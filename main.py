@@ -22,6 +22,7 @@ def shopper_entry(db, cursor):
 
 
 def main():
+
     db = sqlite3.connect("Orinocol.db")
     cursor = db.cursor()
 
@@ -50,7 +51,6 @@ def main():
                 print("Wrong Value, Please try again.")
             else:
                 break
-
 
         if menu_selection == 1:
             order_history(cursor, shopper_id)
@@ -139,9 +139,21 @@ def add_basket_item(db, cursor, shopper_id):
     cursor.execute(category_query)
     category_rows = cursor.fetchall()
     print("\nPlease choose an item category\n")
+    cat_count = 0
     for num, id in enumerate(category_rows):
         print(f"{num + 1}. {id[0]}")
-    category_choice = int(input("\nUser input: "))
+        cat_count = cat_count + 1
+
+    while True:
+        try:
+            category_choice = int(input("\nUser input: "))
+            if category_choice <= 0 or category_choice > cat_count:
+                print(f"Selection not valid, please select an item between 1 and {cat_count}")
+                continue
+        except ValueError:
+            print("Wrong Value")
+        else:
+            break
 
     print("\nProducts\n")
     product_query = ''' SELECT product_description, product_id
@@ -150,9 +162,22 @@ def add_basket_item(db, cursor, shopper_id):
                         '''
     cursor.execute(product_query, (category_choice,))
     product_rows = cursor.fetchall()
+    pro_count = 0
     for num, item in enumerate(product_rows):
         print(f"{num + 1}. {item[0]}")
-    product_choice = int(input("\nUser input: "))
+        pro_count += 1
+
+    while True:
+        try:
+            product_choice = int(input("\nUser input: "))
+            if product_choice <= 0 or product_choice > pro_count:
+                print(f"Selection not valid, please select an item between 1 and {pro_count}")
+                continue
+        except ValueError:
+            print("Wrong Value")
+        else:
+            break
+
     product_id = product_rows[product_choice - 1][1]
 
     seller_query = '''  SELECT s.seller_name, ps.price, s.seller_id
@@ -163,13 +188,38 @@ def add_basket_item(db, cursor, shopper_id):
     seller_rows = cursor.fetchall()
 
     print("\nSellers who sell this product\n")
+    sel_count = 0
     for num, item in enumerate(seller_rows):
         print("{}. {} (£{:.2f})".format(num + 1, item[0], item[1]))
+        sel_count += 1
 
-    seller_choice = int(input("\nPlease enter choice of seller: "))
+    while True:
+        try:
+            seller_choice = int(input("\nUser input: "))
+            if seller_choice <= 0 or seller_choice > sel_count:
+                print(f"Selection not valid, please select an item between 1 and {sel_count}")
+                continue
+        except ValueError:
+            print("Wrong Value")
+        else:
+            break
+
     seller_id = seller_rows[seller_choice - 1][2]
     seller_price = seller_rows[seller_choice - 1][1]
-    item_qty = int(input("\nPlease enter item quantity: "))
+
+    while True:
+        try:
+            item_qty = int(input("\nPlease enter item quantity: "))
+            if item_qty == 0:
+                print("Item quantity must be greater than 0")
+                continue
+            elif item_qty <= 0:
+                print("Item quantity cannot be a negative integer")
+                continue
+        except ValueError:
+            print("Please enter an integer")
+        else:
+            break
 
     shopper_basket_id_query = '''   SELECT basket_id
                                     FROM shopper_baskets
@@ -191,14 +241,33 @@ def change_quantity(db, cursor, shopper_id):
     if not basket_contents:
         return
 
-    # num_of_items iterable 1 less than selection
-
-    # add != 0 and checking if item no exists, plus try except
-
     basket_len = len(basket_contents)
     if basket_len != 1:
-        item_selection = int(input("Please enter the basket item number for which you'd like to change quantity: "))
-        quantity_selection = int(input("Please enter the new quantity you'd like to purchase: "))
+
+        while True:
+            try:
+                item_selection = int(input("Please enter the basket item number for which you'd like to change quantity: "))
+                if item_selection <= 0 or item_selection > basket_len:
+                    print(f"Item no not found, please enter a value between 1 and {basket_len}")
+                    continue
+            except ValueError:
+                print("Please enter an integer")
+            else:
+                break
+
+        while True:
+            try:
+                quantity_selection = int(input("Please enter the new quantity you'd like to purchase: "))
+                if quantity_selection == 0:
+                    print("Quantity must be greater than zero")
+                    continue
+                elif quantity_selection <= 0:
+                    print("Please enter a positive integer")
+                    continue
+            except ValueError:
+                print("Please enter an integer")
+            else:
+                break
 
         obtain_product_id_query = '''   SELECT bc.product_id,bc.quantity*ps.price AS total
                                         FROM product_sellers ps LEFT OUTER JOIN basket_contents bc ON ps.seller_id = bc.seller_id AND ps.product_id = bc.product_id
@@ -213,7 +282,19 @@ def change_quantity(db, cursor, shopper_id):
         product_id = product_id_result[item_selection-1][0]
 
     else:
-        quantity_selection = int(input("Please enter the new quantity you'd like to purchase: "))
+        while True:
+            try:
+                quantity_selection = int(input("Please enter the new quantity you'd like to purchase: "))
+                if quantity_selection == 0:
+                    print(f"Quantity must be greater than zero")
+                    continue
+                elif quantity_selection <= 0:
+                    print("Please enter a positive integer")
+                    continue
+            except ValueError:
+                print("Please enter an integer")
+            else:
+                break
         obtain_product_id_query = '''   select product_id 
                                                 from basket_contents
                                                 where basket_id = (select basket_id
@@ -240,14 +321,18 @@ def remove_item(db, cursor, shopper_id):
     if not basket_contents:
         return
 
-    # num_of_items iterable 1 less than selection
-
-    # add != 0 and checking if item no exists, plus try except
-    # add single row detection
-
     basket_len = len(basket_contents)
     if basket_len != 1:
-        item_selection = int(input("Please enter the basket item number for which you'd like to remove: "))
+        while True:
+            try:
+                item_selection = int(input("Please enter the basket item number for which you'd like to remove: "))
+                if item_selection <= 0 or item_selection > basket_len:
+                    print(f"Please enter a number between 1 and {basket_len}")
+                    continue
+            except ValueError:
+                print("Please enter a valid selection")
+            else:
+                break
 
         obtain_product_id_query = '''   SELECT bc.product_id,bc.quantity*ps.price AS total
                                             FROM product_sellers ps LEFT OUTER JOIN basket_contents bc ON ps.seller_id = bc.seller_id AND ps.product_id = bc.product_id
@@ -261,16 +346,27 @@ def remove_item(db, cursor, shopper_id):
         product_id_result = cursor.fetchall()
         product_id = product_id_result[item_selection - 1][0]
 
-        customer_sure = input("Are you sure you wish to delete this product (Y/N)? ")
+        while True:
+            customer_sure = input("Are you sure you wish to delete this product (Y/N)? ")
+            if customer_sure.upper() not in ("Y", "N"):
+                print("Please enter an appropriate value")
+            elif customer_sure.upper() == "N":
+                print("Returning to main menu\n")
+                return
+            else:
+                break
 
-        if customer_sure.upper == "N":
-            print("Returning to main menu\n")
-            return
     else:
-        customer_sure = input("Are you sure you wish to delete this product and empty your basket (Y/N)? ")
-        if customer_sure.upper == "N":
-            print("Returning to main menu\n")
-            return
+        while True:
+            customer_sure = input("Are you sure you wish to delete this product (Y/N)? ")
+            if customer_sure.upper() not in ("Y", "N"):
+                print("Please enter an appropriate value")
+            elif customer_sure.upper() == "N":
+                print("Returning to main menu\n")
+                return
+            else:
+                break
+
         obtain_product_id_query = '''   select product_id 
                                         from basket_contents
                                         where basket_id = (select basket_id
@@ -297,12 +393,18 @@ def checkout_basket(cursor, db, shopper_id):
     basket_value, num_of_items = view_basket(cursor, shopper_id, change_basket=True)
 
     if not basket_value:
-        print("Your basket is empty, please add items in order to checkout")
-
-    customer_sure = input("Do you wish to proceed with checkout (Y/N)? ")
-
-    if customer_sure.upper() == "N":
+        print("Your basket is empty, please add items in order to checkout\n")
         return
+
+    while True:
+        customer_sure = input("Do you wish to proceed with checkout (Y/N)? ")
+        if customer_sure.upper() not in ("Y", "N"):
+            print("Please enter an appropriate value")
+        elif customer_sure.upper() == "N":
+            print("Returning to main menu\n")
+            return
+        else:
+            break
 
     get_basket_info = '''   select product_id, seller_id, quantity, price
                             from basket_contents
@@ -319,8 +421,6 @@ def checkout_basket(cursor, db, shopper_id):
     new_id = top_id[0]
     new_id = new_id + random.randint(1, 50000)
     order_status = "Placed"
-    print(num_of_items)
-    print(new_id)
 
     generate_shopper_order = '''insert into shopper_orders
                                 values(?, ?, date('now'), ?)'''
