@@ -1,5 +1,6 @@
 import sqlite3
 import sys
+import random
 
 
 def shopper_entry(db, cursor):
@@ -39,7 +40,17 @@ def main():
         print("6. Checkout")
         print("7. Exit\n")
 
-        menu_selection = int(input("User Input: "))
+        while True:
+            try:
+                menu_selection = int(input("User Input: "))
+                if menu_selection not in (1, 2, 3, 4, 5, 6, 7):
+                    print("Please make an appropriate selection")
+                    continue
+            except ValueError:
+                print("Wrong Value, Please try again.")
+            else:
+                break
+
 
         if menu_selection == 1:
             order_history(cursor, shopper_id)
@@ -50,9 +61,9 @@ def main():
         elif menu_selection == 4:
             change_quantity(db, cursor, shopper_id)
         elif menu_selection == 5:
-            pass
+            remove_item(db, cursor, shopper_id)
         elif menu_selection == 6:
-            pass
+            checkout_basket(cursor, db, shopper_id)
         elif menu_selection == 7:
             db.close()
             sys.exit("\nThank you for shopping with us!")
@@ -84,8 +95,9 @@ def order_history(cursor, shopper_id):
                 print(
                     "{:7s}  {:10s}  {:80s} {:20s}£ {:6.2f} {:5d}      {:8s}".format(" ", row[1], row[2], row[3], row[4],
                                                                                     row[5], row[6]))
+        print("")
     else:
-        print("No orders placed by this customer")
+        print("No orders placed by this customer\n")
 
 
 def view_basket(cursor, shopper_id, change_basket):
@@ -114,7 +126,7 @@ def view_basket(cursor, shopper_id, change_basket):
             total_sum += row[4]
             num_of_items = num
         print("{:>106s} {:>38s} {:<5.2f}".format("Basket total", "£", total_sum))
-        if change_quantity:
+        if change_basket:
             return basket_rows, num_of_items
     else:
         print("\nBasket is empty\n")
@@ -182,21 +194,34 @@ def change_quantity(db, cursor, shopper_id):
     # num_of_items iterable 1 less than selection
 
     # add != 0 and checking if item no exists, plus try except
-    item_selection = int(input("Please enter the basket item number for which you'd like to change quantity: "))
-    quantity_selection = int(input("Please enter the new quantity you'd like to purchase "))
 
-    obtain_product_id_query = '''   SELECT bc.product_id,bc.quantity*ps.price AS total
-                                    FROM product_sellers ps LEFT OUTER JOIN basket_contents bc ON ps.seller_id = bc.seller_id AND ps.product_id = bc.product_id
-                                    JOIN sellers s ON ps.seller_id = s.seller_id
-                                    JOIN products p ON ps.product_id = p.product_id
-                                    WHERE bc.basket_id = (  SELECT basket_id
-                                                            FROM shopper_baskets
-                                                            WHERE shopper_id = ?)
-                                    ORDER BY total DESC'''
-    cursor.execute(obtain_product_id_query, (shopper_id, ))
-    product_id_result = cursor.fetchall()
-    product_id = product_id_result[item_selection-1][0]
-    print(product_id)
+    basket_len = len(basket_contents)
+    if basket_len != 1:
+        item_selection = int(input("Please enter the basket item number for which you'd like to change quantity: "))
+        quantity_selection = int(input("Please enter the new quantity you'd like to purchase: "))
+
+        obtain_product_id_query = '''   SELECT bc.product_id,bc.quantity*ps.price AS total
+                                        FROM product_sellers ps LEFT OUTER JOIN basket_contents bc ON ps.seller_id = bc.seller_id AND ps.product_id = bc.product_id
+                                        JOIN sellers s ON ps.seller_id = s.seller_id
+                                        JOIN products p ON ps.product_id = p.product_id
+                                        WHERE bc.basket_id = (  SELECT basket_id
+                                                                FROM shopper_baskets
+                                                                WHERE shopper_id = ?)
+                                        ORDER BY total DESC'''
+        cursor.execute(obtain_product_id_query, (shopper_id, ))
+        product_id_result = cursor.fetchall()
+        product_id = product_id_result[item_selection-1][0]
+
+    else:
+        quantity_selection = int(input("Please enter the new quantity you'd like to purchase: "))
+        obtain_product_id_query = '''   select product_id 
+                                                from basket_contents
+                                                where basket_id = (select basket_id
+                                                from shopper_baskets
+                                                where shopper_id = ?)'''
+        cursor.execute(obtain_product_id_query, (shopper_id,))
+        product_id_result = cursor.fetchone()
+        product_id = product_id_result[0]
 
     update_query = '''  update basket_contents 
                         set quantity = ?
@@ -205,6 +230,127 @@ def change_quantity(db, cursor, shopper_id):
                                             where shopper_id = ?)
                         and product_id = ?'''
     cursor.execute(update_query, (quantity_selection, shopper_id, product_id))
+    db.commit()
+
+    view_basket(cursor, shopper_id, change_basket=False)
+
+
+def remove_item(db, cursor, shopper_id):
+    basket_contents, num_of_items = view_basket(cursor, shopper_id, change_basket=True)
+    if not basket_contents:
+        return
+
+    # num_of_items iterable 1 less than selection
+
+    # add != 0 and checking if item no exists, plus try except
+    # add single row detection
+
+    basket_len = len(basket_contents)
+    if basket_len != 1:
+        item_selection = int(input("Please enter the basket item number for which you'd like to remove: "))
+
+        obtain_product_id_query = '''   SELECT bc.product_id,bc.quantity*ps.price AS total
+                                            FROM product_sellers ps LEFT OUTER JOIN basket_contents bc ON ps.seller_id = bc.seller_id AND ps.product_id = bc.product_id
+                                            JOIN sellers s ON ps.seller_id = s.seller_id
+                                            JOIN products p ON ps.product_id = p.product_id
+                                            WHERE bc.basket_id = (  SELECT basket_id
+                                                                    FROM shopper_baskets
+                                                                    WHERE shopper_id = ?)
+                                            ORDER BY total DESC'''
+        cursor.execute(obtain_product_id_query, (shopper_id,))
+        product_id_result = cursor.fetchall()
+        product_id = product_id_result[item_selection - 1][0]
+
+        customer_sure = input("Are you sure you wish to delete this product (Y/N)? ")
+
+        if customer_sure.upper == "N":
+            print("Returning to main menu\n")
+            return
+    else:
+        customer_sure = input("Are you sure you wish to delete this product and empty your basket (Y/N)? ")
+        if customer_sure.upper == "N":
+            print("Returning to main menu\n")
+            return
+        obtain_product_id_query = '''   select product_id 
+                                        from basket_contents
+                                        where basket_id = (select basket_id
+                                        from shopper_baskets
+                                        where shopper_id = ?)'''
+        cursor.execute(obtain_product_id_query, (shopper_id,))
+        product_id_result = cursor.fetchone()
+        product_id = product_id_result[0]
+
+    delete_item_query = ''' delete from basket_contents
+                            where basket_id = ( select basket_id
+                                                from shopper_baskets
+                                                where shopper_id = ?)
+                            and product_id = ?'''
+
+    cursor.execute(delete_item_query, (shopper_id, product_id))
+    db.commit()
+
+    view_basket(cursor, shopper_id, change_basket=False)
+
+
+def checkout_basket(cursor, db, shopper_id):
+
+    basket_value, num_of_items = view_basket(cursor, shopper_id, change_basket=True)
+
+    if not basket_value:
+        print("Your basket is empty, please add items in order to checkout")
+
+    customer_sure = input("Do you wish to proceed with checkout (Y/N)? ")
+
+    if customer_sure.upper() == "N":
+        return
+
+    get_basket_info = '''   select product_id, seller_id, quantity, price
+                            from basket_contents
+                            where basket_id = ( select basket_id from shopper_baskets
+                                                where shopper_id = ?)'''
+    cursor.execute(get_basket_info, (shopper_id,))
+    basket_contents = cursor.fetchall()
+
+    # generate order ID
+    last_order_id_query = '''   select order_id from ordered_products
+                                order by order_id desc'''
+    cursor.execute(last_order_id_query)
+    top_id = cursor.fetchone()
+    new_id = top_id[0]
+    new_id = new_id + random.randint(1, 50000)
+    order_status = "Placed"
+    print(num_of_items)
+    print(new_id)
+
+    generate_shopper_order = '''insert into shopper_orders
+                                values(?, ?, date('now'), ?)'''
+    cursor.execute(generate_shopper_order, (new_id, shopper_id, order_status))
+    db.commit()
+
+    for i in range(num_of_items + 1):
+        generate_order_query = '''  insert into ordered_products
+                                    values (?, ?, ?, ?, ?, ?)'''
+        cursor.execute(generate_order_query, (new_id, basket_contents[i][0], basket_contents[i][1], basket_contents[i][2], basket_contents[i][3], order_status))
+    db.commit()
+    delete_baskets(cursor, db, shopper_id)
+
+    create_todays_basket_query = '''INSERT INTO shopper_baskets (shopper_id, basket_created_date_time)
+                                            VALUES (?, DATE('now'))
+                                            '''
+    cursor.execute(create_todays_basket_query, (shopper_id,))
+    db.commit()
+
+    print("\nCheckout complete, your order has been placed.\n")
+
+
+def delete_baskets(cursor, db, shopper_id):
+
+    delete_shopper_baskets = '''    delete from shopper_baskets where basket_id = (select basket_id from shopper_baskets
+                                    where shopper_id = ?)'''
+    delete_basket_contents = '''    delete from basket_contents where basket_id = (select basket_id from shopper_baskets
+                                    where shopper_id = ?)'''
+    cursor.execute(delete_basket_contents, (shopper_id,))
+    cursor.execute(delete_shopper_baskets, (shopper_id,))
     db.commit()
 
 
