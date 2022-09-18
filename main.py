@@ -45,10 +45,10 @@ def main():
             try:
                 menu_selection = int(input("User Input: "))
                 if menu_selection not in (1, 2, 3, 4, 5, 6, 7):
-                    print("Please make an appropriate selection")
+                    print('\x1b[6;30;41m' + "Please make an appropriate selection" + '\x1b[0m')
                     continue
             except ValueError:
-                print("Wrong Value, Please try again.")
+                print('\x1b[6;30;41m' + "Wrong Value, Please try again." + '\x1b[0m')
             else:
                 break
 
@@ -148,10 +148,10 @@ def add_basket_item(db, cursor, shopper_id):
         try:
             category_choice = int(input("\nUser input: "))
             if category_choice <= 0 or category_choice > cat_count:
-                print(f"Selection not valid, please select an item between 1 and {cat_count}")
+                print('\x1b[6;30;41m' + f"Selection not valid, please select an item between 1 and {cat_count}" + '\x1b[0m')
                 continue
         except ValueError:
-            print("Wrong Value")
+            print('\x1b[6;30;41m' + "Wrong Value" + '\x1b[0m')
         else:
             break
 
@@ -171,10 +171,10 @@ def add_basket_item(db, cursor, shopper_id):
         try:
             product_choice = int(input("\nUser input: "))
             if product_choice <= 0 or product_choice > pro_count:
-                print(f"Selection not valid, please select an item between 1 and {pro_count}")
+                print('\x1b[6;30;41m' + f"Selection not valid, please select an item between 1 and {pro_count}" + '\x1b[0m')
                 continue
         except ValueError:
-            print("Wrong Value")
+            print('\x1b[6;30;41m' + "Wrong Value" + '\x1b[0m')
         else:
             break
 
@@ -197,10 +197,10 @@ def add_basket_item(db, cursor, shopper_id):
         try:
             seller_choice = int(input("\nUser input: "))
             if seller_choice <= 0 or seller_choice > sel_count:
-                print(f"Selection not valid, please select an item between 1 and {sel_count}")
+                print('\x1b[6;30;41m' + f"Selection not valid, please select an item between 1 and {sel_count}" + '\x1b[0m')
                 continue
         except ValueError:
-            print("Wrong Value")
+            print('\x1b[6;30;41m' + "Wrong Value" + '\x1b[0m')
         else:
             break
 
@@ -211,13 +211,13 @@ def add_basket_item(db, cursor, shopper_id):
         try:
             item_qty = int(input("\nPlease enter item quantity: "))
             if item_qty == 0:
-                print("Item quantity must be greater than 0")
+                print('\x1b[6;30;41m' + "Item quantity must be greater than 0" + '\x1b[0m')
                 continue
             elif item_qty <= 0:
-                print("Item quantity cannot be a negative integer")
+                print('\x1b[6;30;41m' + "Item quantity cannot be a negative integer" + '\x1b[0m')
                 continue
         except ValueError:
-            print("Please enter an integer")
+            print('\x1b[6;30;41m' + "Please enter an integer" + '\x1b[0m')
         else:
             break
 
@@ -248,10 +248,10 @@ def change_quantity(db, cursor, shopper_id):
             try:
                 item_selection = int(input("Please enter the basket item number for which you'd like to change quantity: "))
                 if item_selection <= 0 or item_selection > basket_len:
-                    print(f"Item no not found, please enter a value between 1 and {basket_len}")
+                    print('\x1b[6;30;41m' + f"Item no not found, please enter a value between 1 and {basket_len}" + '\x1b[0m')
                     continue
             except ValueError:
-                print("Please enter an integer")
+                print('\x1b[6;30;41m' + "Please enter an integer" + '\x1b[0m')
             else:
                 break
 
@@ -259,13 +259,13 @@ def change_quantity(db, cursor, shopper_id):
             try:
                 quantity_selection = int(input("Please enter the new quantity you'd like to purchase: "))
                 if quantity_selection == 0:
-                    print("Quantity must be greater than zero")
+                    print('\x1b[6;30;41m' + "Quantity must be greater than zero" + '\x1b[0m')
                     continue
                 elif quantity_selection <= 0:
-                    print("Please enter a positive integer")
+                    print('\x1b[6;30;41m' + "Please enter a positive integer" + '\x1b[0m')
                     continue
             except ValueError:
-                print("Please enter an integer")
+                print('\x1b[6;30;41m' + "Please enter an integer" + '\x1b[0m')
             else:
                 break
 
@@ -286,13 +286,13 @@ def change_quantity(db, cursor, shopper_id):
             try:
                 quantity_selection = int(input("Please enter the new quantity you'd like to purchase: "))
                 if quantity_selection == 0:
-                    print(f"Quantity must be greater than zero")
+                    print('\x1b[6;30;41m' + "Quantity must be greater than zero" + '\x1b[0m')
                     continue
                 elif quantity_selection <= 0:
-                    print("Please enter a positive integer")
+                    print('\x1b[6;30;41m' + "Please enter a positive integer" + '\x1b[0m')
                     continue
             except ValueError:
-                print("Please enter an integer")
+                print('\x1b[6;30;41m' + "Please enter an integer" + '\x1b[0m')
             else:
                 break
         obtain_product_id_query = '''   select product_id 
@@ -327,10 +327,10 @@ def remove_item(db, cursor, shopper_id):
             try:
                 item_selection = int(input("Please enter the basket item number for which you'd like to remove: "))
                 if item_selection <= 0 or item_selection > basket_len:
-                    print(f"Please enter a number between 1 and {basket_len}")
+                    print('\x1b[6;30;41m' + f"Please enter a number between 1 and {basket_len}" + '\x1b[0m')
                     continue
             except ValueError:
-                print("Please enter a valid selection")
+                print('\x1b[6;30;41m' + "Please enter a valid selection" + '\x1b[0m')
             else:
                 break
 
@@ -349,9 +349,9 @@ def remove_item(db, cursor, shopper_id):
         while True:
             customer_sure = input("Are you sure you wish to delete this product (Y/N)? ")
             if customer_sure.upper() not in ("Y", "N"):
-                print("Please enter an appropriate value")
+                print('\x1b[6;30;41m' + "Please enter an appropriate value" + '\x1b[0m')
             elif customer_sure.upper() == "N":
-                print("Returning to main menu\n")
+                print('\x1b[6;30;41m' + "Returning to main menu" + '\x1b[0m\n')
                 return
             else:
                 break
@@ -360,9 +360,9 @@ def remove_item(db, cursor, shopper_id):
         while True:
             customer_sure = input("Are you sure you wish to delete this product (Y/N)? ")
             if customer_sure.upper() not in ("Y", "N"):
-                print("Please enter an appropriate value")
+                print('\x1b[6;30;41m' + "Please enter an appropriate value" + '\x1b[0m')
             elif customer_sure.upper() == "N":
-                print("Returning to main menu\n")
+                print('\x1b[6;30;41m' + "Returning to main menu\n" + '\x1b[0m')
                 return
             else:
                 break
@@ -399,9 +399,9 @@ def checkout_basket(cursor, db, shopper_id):
     while True:
         customer_sure = input("Do you wish to proceed with checkout (Y/N)? ")
         if customer_sure.upper() not in ("Y", "N"):
-            print("Please enter an appropriate value")
+            print('\x1b[6;30;41m' + "Please enter an appropriate value" + '\x1b[0m')
         elif customer_sure.upper() == "N":
-            print("Returning to main menu\n")
+            print('\x1b[6;30;41m' + "Returning to main menu" + '\x1b[0m\n')
             return
         else:
             break
@@ -440,7 +440,7 @@ def checkout_basket(cursor, db, shopper_id):
     cursor.execute(create_todays_basket_query, (shopper_id,))
     db.commit()
 
-    print("\nCheckout complete, your order has been placed.\n")
+    print('\n\x1b[6;30;42m' + "Checkout complete, your order has been placed." + '\x1b[0m\n')
 
 
 def delete_baskets(cursor, db, shopper_id):
